@@ -1,6 +1,7 @@
 package com.km.sogou;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -14,6 +15,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.StringTokenizer;
 
 public class KeyWordCount {
@@ -48,10 +50,15 @@ public class KeyWordCount {
 
     public static void main(String[] args) throws Exception {
         Configuration conf=new Configuration();
-        String[] ioArgs = new String[]{"hdfs://192.168.145.128:9000/clean_same_out","hdfs://192.168.145.128:9000/key_out"};
 
+        String inputpath="hdfs://192.168.145.128:9000/clean_same_out";
+        String outputpath="hdfs://192.168.145.128:9000/key_out";
         Job job=Job.getInstance(conf,"key word count");
 
+        FileSystem fs = FileSystem.get(new URI("hdfs://localhost:9000"), conf);
+        if (fs.exists(new Path(inputpath))) {
+            fs.delete(new Path(outputpath), true);
+        }
 
         job.setReducerClass(KeyWordCount.Reduce.class);
         job.setMapperClass(KeyWordCount.Map.class);
@@ -66,8 +73,8 @@ public class KeyWordCount {
         // 提供一个RecordWriter的实现，负责数据输出
         job.setOutputFormatClass(TextOutputFormat.class);
 
-        FileInputFormat.addInputPath(job, new Path(ioArgs[0]));
-        FileOutputFormat.setOutputPath(job, new Path(ioArgs[1]));
+        FileInputFormat.addInputPath(job, new Path(inputpath));
+        FileOutputFormat.setOutputPath(job, new Path(outputpath));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
