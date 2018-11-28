@@ -35,8 +35,8 @@ public class KeyWordCount {
             }
         }
     }
-    public static class Reduce extends Reducer<Text,IntWritable,Text,LongWritable>{
-        private LongWritable result=new LongWritable();
+    public static class Reduce extends Reducer<Text,IntWritable,Text,IntWritable>{
+        private IntWritable result=new IntWritable();
         @Override
         protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
             int count=0;
@@ -55,8 +55,8 @@ public class KeyWordCount {
         String outputpath="hdfs://192.168.145.128:9000/key_out";
         Job job=Job.getInstance(conf,"key word count");
 
-        FileSystem fs = FileSystem.get(new URI("hdfs://localhost:9000"), conf);
-        if (fs.exists(new Path(inputpath))) {
+        FileSystem fs = FileSystem.get(new URI("hdfs://192.168.145.128:9000/key_out"), conf);
+        if (fs.exists(new Path(outputpath))) {
             fs.delete(new Path(outputpath), true);
         }
 
@@ -64,8 +64,9 @@ public class KeyWordCount {
         job.setMapperClass(KeyWordCount.Map.class);
         job.setCombinerClass(KeyWordCount.Reduce.class);
 
+
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
         // 将输入的数据集分割成小数据块splites，提供一个RecordReder的实现
         job.setInputFormatClass(TextInputFormat.class);
